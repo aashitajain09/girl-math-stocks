@@ -7,8 +7,8 @@ import { FreeMoneyCalculator } from "@/components/FreeMoneyCalculator";
 import { MyPortfolio } from "@/components/MyPortfolio";
 import { PortfolioProvider } from "@/components/PortfolioContext";
 import { ChangeChip } from "@/components/ChangeChip";
+import { PortfolioSummaryCard } from "@/components/PortfolioSummaryCard";
 import { getDictionary, getPortfolio, getQuote, getScenarios, getStocks } from "@/lib/data";
-import { formatUsd } from "@/lib/finance";
 
 export default function Home() {
   return (
@@ -69,11 +69,7 @@ async function Dashboard() {
             <p className="mt-1 font-display text-xl font-semibold">{top?.ticker ?? "—"}</p>
             {top && <ChangeChip value={top.changePct} />}
           </div>
-          <a href="#my-portfolio" className="card col-span-2 p-4 transition-colors hover:bg-white">
-            <p className="text-xs text-plum-soft">Your practice portfolio</p>
-            <p className="font-display text-3xl font-semibold tabular-nums">{formatUsd(portfolio.totalValue, true)}</p>
-            <p className="text-xs text-plum-soft">{portfolio.positions.length} holdings · see the closet →</p>
-          </a>
+          <PortfolioSummaryCard />
         </div>
       </section>
 

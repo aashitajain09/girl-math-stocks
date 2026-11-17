@@ -4,7 +4,10 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,6 +43,19 @@ public class PortfolioController {
         }
         try {
             return ResponseEntity.status(HttpStatus.CREATED).body(service.add(req.ticker(), req.shares()));
+        } catch (IllegalArgumentException e) {
+            return badRequest(e.getMessage());
+        }
+    }
+
+    /** DELETE /api/portfolio/holdings/{ticker}?shares=1 (omit shares to sell the whole position) */
+    @DeleteMapping("/holdings/{ticker}")
+    public ResponseEntity<?> sell(@PathVariable String ticker, @RequestParam(required = false) Double shares) {
+        if (shares != null && (shares <= 0 || shares > 10_000)) {
+            return badRequest("shares must be a positive number.");
+        }
+        try {
+            return ResponseEntity.ok(service.sell(ticker, shares));
         } catch (IllegalArgumentException e) {
             return badRequest(e.getMessage());
         }

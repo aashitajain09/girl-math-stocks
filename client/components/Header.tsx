@@ -25,6 +25,18 @@ export function Header() {
           ))}
         </nav>
       </div>
+      {/* Phones: same links as a swipeable row under the logo */}
+      <nav aria-label="Sections" className="flex gap-1 overflow-x-auto px-3 pb-2 sm:hidden">
+        {links.map((l) => (
+          <a
+            key={l.href}
+            href={l.href}
+            className="shrink-0 rounded-full border border-blush-deep/60 bg-white/60 px-3 py-1 text-sm font-medium text-plum-soft"
+          >
+            {l.label}
+          </a>
+        ))}
+      </nav>
     </header>
   );
 }

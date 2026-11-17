@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DictionaryResponse, GlossaryEntry } from "@/lib/types";
 
 export function Translator({ initial }: { initial: GlossaryEntry[] }) {
+  const tags = useMemo(() => Array.from(new Set(initial.map((e) => e.tag))), [initial]);
   const [query, setQuery] = useState("");
+  const [tag, setTag] = useState("");
   const [entries, setEntries] = useState(initial);
   const [loading, setLoading] = useState(false);
   const [flipped, setFlipped] = useState<Record<string, boolean>>({});
@@ -19,7 +21,8 @@ export function Translator({ initial }: { initial: GlossaryEntry[] }) {
     const t = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/dictionary?q=${encodeURIComponent(query)}`, { signal: ctrl.signal });
+        const qs = new URLSearchParams({ q: query, tag });
+        const res = await fetch(`/api/dictionary?${qs}`, { signal: ctrl.signal });
         const data = (await res.json()) as DictionaryResponse;
         setEntries(data.entries);
       } catch {
@@ -32,7 +35,7 @@ export function Translator({ initial }: { initial: GlossaryEntry[] }) {
       clearTimeout(t);
       ctrl.abort();
     };
-  }, [query]);
+  }, [query, tag]);
 
   return (
     <section id="translator" className="scroll-mt-24">
@@ -42,20 +45,39 @@ export function Translator({ initial }: { initial: GlossaryEntry[] }) {
         Finance-bro jargon, decoded. Tap a card to see the textbook version.
       </p>
 
-      <label className="mt-5 block max-w-md">
-        <span className="sr-only">Search terms</span>
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Try “dividend” or “bear market”…"
-          className="field"
-        />
-      </label>
+      <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center">
+        <label className="block w-full max-w-md">
+          <span className="sr-only">Search terms</span>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Try “dividend” or “bear market”…"
+            className="field"
+          />
+        </label>
+        <div role="group" aria-label="Filter by topic" className="flex flex-wrap gap-1.5">
+          {["", ...tags].map((t) => (
+            <button
+              key={t || "all"}
+              type="button"
+              onClick={() => setTag(t)}
+              aria-pressed={tag === t}
+              className={`chip border transition-colors ${
+                tag === t ? "border-plum bg-plum text-cream" : "border-blush-deep bg-white/70 text-plum-soft hover:bg-blush"
+              }`}
+            >
+              {t || "All topics"}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div aria-live="polite" className={`mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${loading ? "opacity-60" : ""}`}>
         {entries.length === 0 && (
-          <p className="text-plum-soft">No translation yet for &ldquo;{query}&rdquo;. Add it to the wishlist? 💌</p>
+          <p className="text-plum-soft">
+            No translation yet for &ldquo;{query}&rdquo;{tag && <> in {tag}</>}. Add it to the wishlist? 💌
+          </p>
         )}
         {entries.map((e) => {
           const showWs = !!flipped[e.id];

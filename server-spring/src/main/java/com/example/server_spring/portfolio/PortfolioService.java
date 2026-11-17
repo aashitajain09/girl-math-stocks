@@ -58,6 +58,32 @@ public class PortfolioService {
         return view();
     }
 
+    /**
+     * Sells shares (simulated). {@code shares == null} sells the whole position.
+     * Cost basis per share is unchanged by a sale; the position is removed when it hits zero.
+     */
+    public synchronized PortfolioView sell(String ticker, Double shares) {
+        String key = ticker.toUpperCase();
+        Holding h = holdings.get(key);
+        if (h == null) {
+            throw new IllegalArgumentException("You don't own any " + key + " to sell.");
+        }
+        if (shares != null && shares > h.shares() + 1e-9) {
+            throw new IllegalArgumentException("You only own " + fmt(h.shares()) + " " + key + ".");
+        }
+        double left = shares == null ? 0 : h.shares() - shares;
+        if (left <= 1e-9) {
+            holdings.remove(key);
+        } else {
+            holdings.put(key, new Holding(key, left, h.avgCost()));
+        }
+        return view();
+    }
+
+    private static String fmt(double v) {
+        return v == Math.rint(v) ? String.valueOf((long) v) : String.valueOf(v);
+    }
+
     private static Position price(Holding h, Stock s) {
         double value = s.price() * h.shares();
         double cost = h.avgCost() * h.shares();

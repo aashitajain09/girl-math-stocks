@@ -41,7 +41,11 @@ Spring boots without Postgres (see `application.properties`); the portfolio is i
 | `GET /api/stocks/:ticker`  | Spring `GET /api/stocks/{ticker}`  | 404 if unknown                |
 | `GET /api/portfolio`       | Spring `GET /api/portfolio`        | practice portfolio            |
 | `POST /api/portfolio`      | Spring `POST /api/portfolio/holdings` | body `{ ticker, shares }`  |
-| `GET /api/dictionary?q=`   | Node `GET /api/dictionary`         | `?tag=` supported on Node     |
+| `DELETE /api/portfolio?ticker=&shares=` | Spring `DELETE /api/portfolio/holdings/{ticker}?shares=` | simulated sell; omit `shares` to sell all |
+| `GET /api/dictionary?q=&tag=` | Node `GET /api/dictionary`      | search and/or filter by topic |
+
+Errors: a 4xx from Spring or Node (bad ticker, overselling) is passed through to the browser as
+`{ "error": "..." }` with the same status. Only an unreachable service or a 5xx falls back to mock data.
 | `GET /api/quote`           | Node `GET /api/girl-math-quote`    | random quote                  |
 | `GET /api/scenarios`       | Node `GET /api/scenarios`          | calculator presets            |
 
