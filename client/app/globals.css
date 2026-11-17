@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+/*
+ * Girl Math Stocks — design tokens
+ * Soft blush + cream base, plum ink for contrast, warm gold for "money" moments.
+ * Gains/losses use a muted sage and a dusty rose so red/green never feels alarming.
+ */
+@theme {
+  --color-cream: #fbf6ef;
+  --color-cream-deep: #f4ebdf;
+  --color-blush: #f7dfe0;
+  --color-blush-deep: #ecbcc0;
+  --color-rose: #c4566a;
+  --color-rose-deep: #9e3c50;
+  --color-plum: #3a2230;
+  --color-plum-soft: #6e5060;
+  --color-gold: #a9813c;
+  --color-gold-soft: #f0e2c4;
+  --color-gain: #3d7a5a;
+  --color-gain-soft: #dcefe3;
+  --color-loss: #b0475a;
+  --color-loss-soft: #f8dfe3;
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 1.5rem;
+  --shadow-soft: 0 1px 2px rgb(58 34 48 / 0.04), 0 8px 24px -12px rgb(58 34 48 / 0.18);
+}
+
+@layer base {
+  html {
+    background: var(--color-cream);
+    color: var(--color-plum);
+  }
+  body {
+    font-family: var(--font-sans);
+    background:
+      radial-gradient(60rem 30rem at 100% -10%, rgb(247 223 224 / 0.8), transparent 60%),
+      radial-gradient(40rem 24rem at -10% 10%, rgb(240 226 196 / 0.55), transparent 60%),
+      var(--color-cream);
+    background-attachment: fixed;
+  }
+  ::selection {
+    background: var(--color-blush-deep);
+    color: var(--color-plum);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-rose);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .card {
+    background: rgb(255 255 255 / 0.72);
+    border: 1px solid rgb(236 188 192 / 0.45);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(6px);
+  }
+  .eyebrow {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 999px;
+    padding: 0.2rem 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 999px;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: background-color 150ms, color 150ms, transform 150ms;
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn-primary {
+    background: var(--color-plum);
+    color: var(--color-cream);
+  }
+  .btn-primary:hover {
+    background: var(--color-rose-deep);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-plum);
+    border: 1px solid var(--color-blush-deep);
+  }
+  .btn-ghost:hover {
+    background: var(--color-blush);
+  }
+  .field {
+    width: 100%;
+    border-radius: 999px;
+    border: 1px solid var(--color-blush-deep);
+    background: white;
+    padding: 0.65rem 1.1rem;
+    font-size: 0.95rem;
+    color: var(--color-plum);
+  }
+  .field::placeholder {
+    color: rgb(110 80 96 / 0.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

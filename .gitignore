@@ -1,0 +1,8 @@
+# Claude Code local files (never commit)
+.claude/
+
+# Dependencies, secrets, OS junk
+node_modules/
+.env
+.env.local
+.DS_Store
