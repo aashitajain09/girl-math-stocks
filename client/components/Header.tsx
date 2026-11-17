@@ -1,3 +1,6 @@
+import { Suspense } from "react";
+import { AccountMenu } from "./AccountMenu";
+
 const links = [
   { href: "#sisterhood", label: "Sisterhood" },
   { href: "#translator", label: "Translator" },
@@ -13,20 +16,25 @@ export function Header() {
           <span className="font-display text-2xl font-semibold italic tracking-tight text-plum">girl math</span>
           <span className="chip bg-gold-soft text-gold">stocks</span>
         </a>
-        <nav aria-label="Sections" className="hidden gap-1 sm:flex">
-          {links.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="rounded-full px-3 py-1.5 text-sm font-medium text-plum-soft transition-colors hover:bg-blush hover:text-plum"
-            >
-              {l.label}
-            </a>
-          ))}
-        </nav>
+        <div className="flex items-center gap-3">
+          <nav aria-label="Sections" className="hidden gap-1 lg:flex">
+            {links.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                className="rounded-full px-3 py-1.5 text-sm font-medium text-plum-soft transition-colors hover:bg-blush hover:text-plum"
+              >
+                {l.label}
+              </a>
+            ))}
+          </nav>
+          <Suspense fallback={null}>
+            <AccountMenu />
+          </Suspense>
+        </div>
       </div>
       {/* Phones: same links as a swipeable row under the logo */}
-      <nav aria-label="Sections" className="flex gap-1 overflow-x-auto px-3 pb-2 sm:hidden">
+      <nav aria-label="Sections" className="flex gap-1 overflow-x-auto px-3 pb-2 lg:hidden">
         {links.map((l) => (
           <a
             key={l.href}

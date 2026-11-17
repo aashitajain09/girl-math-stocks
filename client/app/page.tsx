@@ -8,7 +8,9 @@ import { MyPortfolio } from "@/components/MyPortfolio";
 import { PortfolioProvider } from "@/components/PortfolioContext";
 import { ChangeChip } from "@/components/ChangeChip";
 import { PortfolioSummaryCard } from "@/components/PortfolioSummaryCard";
-import { getDictionary, getPortfolio, getQuote, getScenarios, getStocks } from "@/lib/data";
+import { redirect } from "next/navigation";
+import { getCurrentUser, getPortfolio, getUserExtras } from "@/lib/account";
+import { getDictionary, getQuote, getScenarios, getStocks } from "@/lib/data";
 
 export default function Home() {
   return (
@@ -26,12 +28,19 @@ export default function Home() {
   );
 }
 
-/** Request-time data: fetched in parallel from Spring (stocks, portfolio) and Node (content). */
+/**
+ * Request-time data, fetched in parallel: stocks from Spring, content from Node,
+ * and the signed-in user's account from Supabase.
+ */
 async function Dashboard() {
   await connection();
-  const [stocksRes, portfolio, quote, dictionary, scenarios] = await Promise.all([
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+
+  const [stocksRes, portfolio, extras, quote, dictionary, scenarios] = await Promise.all([
     getStocks(),
     getPortfolio(),
+    getUserExtras(),
     getQuote(),
     getDictionary(),
     getScenarios(),
@@ -42,11 +51,13 @@ async function Dashboard() {
   const top = [...stocks].sort((a, b) => b.changePct - a.changePct)[0];
 
   return (
-    <PortfolioProvider initial={portfolio}>
+    <PortfolioProvider user={user} initial={portfolio} initialExtras={extras}>
       {/* Hero */}
       <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr] lg:items-end">
         <div>
-          <p className="eyebrow">Your money, but make it make sense</p>
+          <p className="eyebrow">
+            {user.displayName ? `Hey ${user.displayName}, your money, but make it make sense` : "Your money, but make it make sense"}
+          </p>
           <h1 className="mt-2 font-display text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
             Investing is just <em className="text-rose">girl math</em> with a longer receipt.
           </h1>
@@ -80,8 +91,8 @@ async function Dashboard() {
 
       {process.env.NODE_ENV === "development" && (
         <p className="text-xs text-plum-soft/70">
-          dev · stocks from <b>{stocksRes.source}</b> · translator from <b>{dictionary.source}</b> · portfolio from{" "}
-          <b>{portfolio.source}</b>
+          dev · stocks from <b>{stocksRes.source}</b> · translator from <b>{dictionary.source}</b> · account from{" "}
+          <b>supabase</b>
         </p>
       )}
     </PortfolioProvider>

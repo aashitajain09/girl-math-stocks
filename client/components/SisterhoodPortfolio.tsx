@@ -8,10 +8,16 @@ import { Sparkline } from "./Sparkline";
 import { usePortfolio } from "./PortfolioContext";
 
 export function SisterhoodPortfolio({ stocks, demo }: { stocks: Stock[]; demo: boolean }) {
-  const sectors = useMemo(() => ["All", ...Array.from(new Set(stocks.map((s) => s.sector)))], [stocks]);
+  const sectors = useMemo(() => ["All", "♡ Watchlist", ...Array.from(new Set(stocks.map((s) => s.sector)))], [stocks]);
   const [sector, setSector] = useState("All");
-  const { addShares, pending, portfolio } = usePortfolio();
-  const visible = sector === "All" ? stocks : stocks.filter((s) => s.sector === sector);
+  const { addShares, pending, portfolio, extras, toggleWatch } = usePortfolio();
+  const watching = new Set(extras.watchlist);
+  const visible =
+    sector === "All"
+      ? stocks
+      : sector === "♡ Watchlist"
+        ? stocks.filter((s) => watching.has(s.ticker))
+        : stocks.filter((s) => s.sector === sector);
   const owned = new Set(portfolio.positions.map((p) => p.ticker));
 
   return (
@@ -44,6 +50,11 @@ export function SisterhoodPortfolio({ stocks, demo }: { stocks: Stock[]; demo: b
         </div>
       </div>
 
+      {visible.length === 0 && (
+        <p className="card p-6 text-plum-soft">
+          Your watchlist is empty. Tap the ♡ on any company to keep an eye on her.
+        </p>
+      )}
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {visible.map((s) => (
           <li key={s.ticker} className="card flex flex-col gap-3 p-5">
@@ -53,7 +64,20 @@ export function SisterhoodPortfolio({ stocks, demo }: { stocks: Stock[]; demo: b
                 <h3 className="font-display text-xl font-semibold leading-tight">{s.name}</h3>
                 <p className="text-sm text-plum-soft">{s.herStory}</p>
               </div>
-              <span className="chip shrink-0 bg-blush text-rose-deep">{s.sector}</span>
+              <div className="flex shrink-0 flex-col items-end gap-2">
+                <span className="chip bg-blush text-rose-deep">{s.sector}</span>
+                <button
+                  type="button"
+                  onClick={() => toggleWatch(s.ticker)}
+                  aria-pressed={watching.has(s.ticker)}
+                  aria-label={watching.has(s.ticker) ? `Remove ${s.name} from watchlist` : `Add ${s.name} to watchlist`}
+                  className={`grid h-8 w-8 place-items-center rounded-full text-lg transition-colors ${
+                    watching.has(s.ticker) ? "bg-rose text-cream" : "bg-white text-rose hover:bg-blush"
+                  }`}
+                >
+                  {watching.has(s.ticker) ? "♥" : "♡"}
+                </button>
+              </div>
             </div>
 
             <div className="flex items-end justify-between">
@@ -68,10 +92,11 @@ export function SisterhoodPortfolio({ stocks, demo }: { stocks: Stock[]; demo: b
 
             <button
               onClick={() => addShares(s.ticker, 1)}
-              disabled={pending === s.ticker}
+              disabled={!!pending || s.price > portfolio.cash}
+              title={s.price > portfolio.cash ? "Not enough practice cash" : undefined}
               className="btn btn-ghost mt-auto self-start disabled:opacity-60"
             >
-              {pending === s.ticker ? "Adding…" : owned.has(s.ticker) ? "+1 more share" : "Add 1 share (practice)"}
+              {pending === s.ticker ? "Buying…" : owned.has(s.ticker) ? "Buy 1 more share" : `Buy 1 share · ${formatUsd(s.price)}`}
             </button>
           </li>
         ))}

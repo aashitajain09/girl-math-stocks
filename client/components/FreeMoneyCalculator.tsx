@@ -1,8 +1,9 @@
 "use client";
 
 import { useId, useMemo, useState } from "react";
-import type { Scenario } from "@/lib/types";
+import type { SavedScenario, Scenario } from "@/lib/types";
 import { formatUsd, projectGrowth, type GrowthPoint } from "@/lib/finance";
+import { usePortfolio } from "./PortfolioContext";
 
 const YEAR_OPTIONS = [5, 10, 20, 30];
 
@@ -14,6 +15,8 @@ export function FreeMoneyCalculator({ scenarios }: { scenarios: Scenario[] }) {
   const [years, setYears] = useState(10);
   const [rate, setRate] = useState(7);
   const ids = { amount: useId(), freq: useId(), rate: useId() };
+  const { extras, saveScenario, deleteScenario, pending } = usePortfolio();
+  const [justSaved, setJustSaved] = useState(false);
 
   const pick = (s: Scenario) => {
     setScenarioId(s.id);
@@ -25,6 +28,27 @@ export function FreeMoneyCalculator({ scenarios }: { scenarios: Scenario[] }) {
   const points = useMemo(() => projectGrowth(annual, years, rate), [annual, years, rate]);
   const end = points[points.length - 1];
   const freeMoney = end.value - end.contributed;
+
+  const onSave = async () => {
+    await saveScenario({
+      label: preset?.label ?? "My custom treat",
+      emoji: preset?.emoji ?? "✨",
+      amount: Math.max(0, amount),
+      perYear: Math.max(0, Math.round(perYear)),
+      years,
+      ratePct: rate,
+    });
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 2000);
+  };
+
+  const load = (s: SavedScenario) => {
+    setScenarioId(scenarios.find((p) => p.label === s.label)?.id ?? "custom");
+    setAmount(s.amount);
+    setPerYear(s.perYear);
+    setYears(s.years);
+    setRate(s.ratePct);
+  };
 
   return (
     <section id="free-money" className="scroll-mt-24">
@@ -128,12 +152,59 @@ export function FreeMoneyCalculator({ scenarios }: { scenarios: Scenario[] }) {
             {preset?.label.toLowerCase() ?? "this treat"}. Invested for {years} years, the growth alone is{" "}
             <strong className="text-gold">{formatUsd(freeMoney)}</strong> you never had to earn.
           </p>
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={pending === "save-scenario"}
+            className="btn btn-primary self-start disabled:opacity-60"
+          >
+            {justSaved ? "Saved ✓" : pending === "save-scenario" ? "Saving…" : "Save this scenario"}
+          </button>
           <p className="text-xs text-plum-soft/80">
             Hypothetical illustration with monthly compounding at a constant rate. Real returns vary, can be negative, and
             aren&rsquo;t guaranteed. This is education, not financial advice.
           </p>
         </div>
       </div>
+
+      {extras.savedScenarios.length > 0 && (
+        <div className="mt-5">
+          <h3 className="font-display text-xl font-semibold">Your saved scenarios</h3>
+          <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {extras.savedScenarios.map((s) => {
+              const pts = projectGrowth(s.amount * s.perYear, s.years, s.ratePct);
+              const last = pts[pts.length - 1];
+              return (
+                <li key={s.id} className="card flex items-start gap-3 p-4">
+                  <span className="text-2xl" aria-hidden>{s.emoji ?? "✨"}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold leading-snug">{s.label}</p>
+                    <p className="text-xs text-plum-soft">
+                      {formatUsd(s.amount, s.amount % 1 !== 0)} × {s.perYear}/yr · {s.years} yrs · {s.ratePct}%
+                    </p>
+                    <p className="mt-1 text-sm">
+                      could become <b className="text-rose-deep tabular-nums">{formatUsd(last.value)}</b>
+                    </p>
+                    <div className="mt-2 flex gap-2">
+                      <button type="button" onClick={() => load(s)} className="chip border border-blush-deep bg-white hover:bg-blush">
+                        Load
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteScenario(s.id)}
+                        aria-label={`Delete saved scenario ${s.label}`}
+                        className="chip text-plum-soft hover:bg-loss-soft hover:text-loss"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
     </section>
   );
 }

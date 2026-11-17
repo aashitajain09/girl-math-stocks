@@ -68,9 +68,52 @@ export interface PortfolioPosition extends Holding {
   gainPct: number;
 }
 
+export interface Trade {
+  id: number;
+  ticker: string;
+  side: "buy" | "sell";
+  shares: number;
+  price: number;
+  total: number;
+  /** Profit or loss locked in by a sale; null for buys. */
+  realizedGain: number | null;
+  createdAt: string;
+}
+
+/** The signed-in user's practice account, priced with current (demo) quotes. */
 export interface PortfolioResponse {
   positions: PortfolioPosition[];
-  totalValue: number;
+  /** Market value of all holdings. */
+  holdingsValue: number;
+  /** Unrealized gain across current holdings. */
   totalGain: number;
-  source: "spring" | "mock";
+  cash: number;
+  startingCash: number;
+  /** cash + holdingsValue */
+  netWorth: number;
+  /** Most recent trades, newest first. */
+  trades: Trade[];
+}
+
+export interface SavedScenario {
+  id: string;
+  label: string;
+  emoji: string | null;
+  amount: number;
+  perYear: number;
+  years: number;
+  ratePct: number;
+}
+
+/** Everything personal the dashboard needs for the signed-in user. */
+export interface UserExtras {
+  watchlist: string[];
+  learnedTerms: string[];
+  savedScenarios: SavedScenario[];
+}
+
+export interface CurrentUser {
+  id: string;
+  email: string;
+  displayName: string | null;
 }

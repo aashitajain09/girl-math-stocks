@@ -2,8 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { DictionaryResponse, GlossaryEntry } from "@/lib/types";
+import { usePortfolio } from "./PortfolioContext";
 
 export function Translator({ initial }: { initial: GlossaryEntry[] }) {
+  const { extras, toggleLearned } = usePortfolio();
+  const learned = new Set(extras.learnedTerms);
+  const learnedCount = initial.filter((e) => learned.has(e.id)).length;
   const tags = useMemo(() => Array.from(new Set(initial.map((e) => e.tag))), [initial]);
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState("");
@@ -42,8 +46,33 @@ export function Translator({ initial }: { initial: GlossaryEntry[] }) {
       <p className="eyebrow">Wall Street → Girl Math</p>
       <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">The Translator</h2>
       <p className="mt-1 max-w-xl text-plum-soft">
-        Finance-bro jargon, decoded. Tap a card to see the textbook version.
+        Finance-bro jargon, decoded. Tap a card to see the textbook version, then mark it &ldquo;got it&rdquo;.
       </p>
+
+      <div className="mt-4 max-w-md">
+        <div className="flex justify-between text-xs font-semibold text-plum-soft">
+          <span>Your fluency</span>
+          <span className="tabular-nums">
+            {learnedCount} / {initial.length} terms
+          </span>
+        </div>
+        <div
+          role="progressbar"
+          aria-label="Terms learned"
+          aria-valuemin={0}
+          aria-valuemax={initial.length}
+          aria-valuenow={learnedCount}
+          className="mt-1 h-2 overflow-hidden rounded-full bg-blush"
+        >
+          <div
+            className="h-full rounded-full bg-gold transition-[width] duration-500"
+            style={{ width: `${initial.length ? (learnedCount / initial.length) * 100 : 0}%` }}
+          />
+        </div>
+        {initial.length > 0 && learnedCount === initial.length && (
+          <p className="mt-1 text-xs font-semibold text-gold">Fluent in Wall Street. Who&rsquo;s the finance bro now? 💅</p>
+        )}
+      </div>
 
       <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center">
         <label className="block w-full max-w-md">
@@ -81,22 +110,42 @@ export function Translator({ initial }: { initial: GlossaryEntry[] }) {
         )}
         {entries.map((e) => {
           const showWs = !!flipped[e.id];
+          const gotIt = learned.has(e.id);
           return (
-            <button
+            <div
               key={e.id}
-              onClick={() => setFlipped((f) => ({ ...f, [e.id]: !f[e.id] }))}
-              aria-pressed={showWs}
-              className={`card flex flex-col gap-2 p-5 text-left transition-colors ${showWs ? "bg-plum! text-cream" : "hover:bg-white"}`}
+              className={`card flex flex-col gap-2 p-5 transition-colors ${showWs ? "bg-plum! text-cream" : ""}`}
             >
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="font-display text-lg font-semibold">{e.term}</h3>
-                <span className={`chip ${showWs ? "bg-white/15 text-cream" : "bg-gold-soft text-gold"}`}>{e.tag}</span>
-              </div>
-              <p className="text-xs font-semibold uppercase tracking-wider opacity-70">
-                {showWs ? "Wall Street says" : "Girl math says"}
-              </p>
-              <p className={showWs ? "text-sm" : "font-display italic"}>{showWs ? e.wallStreet : e.girlMath}</p>
-            </button>
+              <button
+                type="button"
+                onClick={() => setFlipped((f) => ({ ...f, [e.id]: !f[e.id] }))}
+                aria-pressed={showWs}
+                className="flex flex-1 flex-col gap-2 text-left"
+              >
+                <span className="flex w-full items-center justify-between gap-2">
+                  <span className="font-display text-lg font-semibold">{e.term}</span>
+                  <span className={`chip ${showWs ? "bg-white/15 text-cream" : "bg-gold-soft text-gold"}`}>{e.tag}</span>
+                </span>
+                <span className="text-xs font-semibold uppercase tracking-wider opacity-70">
+                  {showWs ? "Wall Street says" : "Girl math says"}
+                </span>
+                <span className={showWs ? "text-sm" : "font-display italic"}>{showWs ? e.wallStreet : e.girlMath}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleLearned(e.id)}
+                aria-pressed={gotIt}
+                className={`chip mt-1 self-start border transition-colors ${
+                  gotIt
+                    ? "border-gain bg-gain-soft text-gain"
+                    : showWs
+                      ? "border-white/30 text-cream hover:bg-white/10"
+                      : "border-blush-deep text-plum-soft hover:bg-blush"
+                }`}
+              >
+                {gotIt ? "✓ Got it" : "Mark as got it"}
+              </button>
+            </div>
           );
         })}
       </div>
